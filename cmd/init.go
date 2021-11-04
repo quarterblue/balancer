@@ -20,6 +20,7 @@ type Storer interface {
 	Delete(key string, reply *string) error
 }
 
+// Implementation of the Storer interface, currently supports only string to string KV
 type Store struct {
 	KeyValue map[string]string
 	mutex    *sync.RWMutex
@@ -56,15 +57,7 @@ type RPCServer struct {
 	Settings Settings
 }
 
-func (r *RPCServer) init(address string) {
-	kv := make(map[string]string)
-	kvMutex := sync.RWMutex{}
-
-	store := &Store{
-		KeyValue: kv,
-		mutex:    &kvMutex,
-	}
-
+func (r *RPCServer) init(address string, store *Store) {
 	rpc.Register(store)
 	rpc.HandleHTTP()
 	addr := r.Settings.Address + ":" + r.Settings.Port

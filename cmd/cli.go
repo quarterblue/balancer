@@ -4,11 +4,13 @@ import (
 	"bufio"
 	"fmt"
 	"log"
-	"net"
 	"net/rpc"
 	"os"
 	"strings"
+	"sync"
 )
+
+type Ident [20]byte
 
 // Configuration settings
 type Settings struct {
@@ -28,19 +30,6 @@ type Settings struct {
 type Request struct {
 	Key   string
 	Value string
-}
-
-// Returns the IP address of the current machine
-func GetLocalAddress() string {
-	conn, err := net.Dial("udp", "8.8.8.8:80")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
-
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-
-	return localAddr.IP.String()
 }
 
 func call(address string, method string, request Request, response interface{}) error {
@@ -70,13 +59,28 @@ func Looper(s Settings) {
 	fmt.Printf("Join address: %s\n", s.Join)
 	fmt.Printf("Node address: %s\n", s.Address)
 
+	addr := fmt.Sprint(s.Address, ":", s.Port)
+	fmt.Println("Address full:")
+	fmt.Println(addr)
+
+	chord := NewChordNode(s.Address, s.Port)
+	fmt.Println(chord)
+
 	// New RPC Server with the configured settings
 	r := RPCServer{
 		Settings: s,
 	}
 
+	kv := make(map[string]string)
+	kvMutex := sync.RWMutex{}
+
+	store := &Store{
+		KeyValue: kv,
+		mutex:    &kvMutex,
+	}
+
 	// Listen for RPC requests in a separate go routine
-	go r.init("127.0.0.1:3001")
+	go r.init("127.0.0.1:3001", store)
 
 	log.Printf("Interactive shell")
 	log.Printf("Commands: ping, get, post")
@@ -137,6 +141,18 @@ func Looper(s Settings) {
 				log.Fatalf("Calling Store.Put: %v", err)
 			}
 			fmt.Println(response)
+		case "dump":
+			fmt.Println("Dumping Results:")
+			store.mutex.RLock()
+			for k, v := range store.KeyValue {
+				fmt.Println(k, v)
+			}
+			store.mutex.RUnlock()
+
+		case "join":
+			targetAddr := args[1]
+			fmt.Printf("Joining Address: %s\n", targetAddr)
+
 		default:
 			fmt.Println("Invalid command.")
 		}
