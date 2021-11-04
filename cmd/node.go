@@ -2,16 +2,21 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 	"sync"
 )
 
+// Successor list size
+const sListSize = 5
+
 // m-bit hash of the node IP Addr or the key (Default uses SHA-1)
+// current implementation stores a big int casted from the m-bit hash bytes
 type Identifier *big.Int
 
 type FingerTable map[string]Finger
 
-// Interface of the Chord Node
+// Interface of the Chord Node, requires implementation of all node functionalities described in the paper
 type ChordNode interface {
 	FindSuccessor(Identifier) Node
 	ClosestPrecedingNode(Identifier) Node
@@ -25,8 +30,11 @@ type ChordNode interface {
 
 // Implementation of the Chord Node
 type Node struct {
-	// The route table
+	// The finger route table described in the paper; maintains up to m entries (nodes)
 	Finger FingerTable
+
+	// The array of n first successors; this is to replicate the successors to deal with failures in nodes
+	SuccessorList []*Entry
 
 	// The next node on the identifier circle; finger[1].node
 	Successor Entry
@@ -34,7 +42,7 @@ type Node struct {
 	// The previous node on the identifier circle
 	Predecessor Entry
 
-	// The m-bit identifier
+	// The m-bit identifier of the node
 	Identifier Identifier
 
 	// IP Address of the node
@@ -50,24 +58,33 @@ type Node struct {
 func NewChordNode(ipAddr, port string) *Node {
 	addr := ipAddr + ":" + port
 	iden := hashString(addr)
+	sList := []*Entry{}
 	node := &Node{
-		IpAddr:     ipAddr,
-		Port:       port,
-		Identifier: iden,
+		IpAddr:        ipAddr,
+		Port:          port,
+		Identifier:    iden,
+		SuccessorList: sList,
 	}
 
 	return node
 }
 
-// func (n *Node) create() error {
-// 	n.successor = Entry{
-// 		ipAddr:     n.ipAddr,
-// 		port:       n.port,
-// 		identifier: n.identifier,
-// 	}
+func (n *Node) GetSuccessor() *Entry {
+	return &n.Successor
+}
 
-// 	return nil
-// }
+func (n *Node) GetSuccessorList() []*Entry {
+	return n.SuccessorList
+}
+
+func (n *Node) Stabilize() {
+	fmt.Println("Stabilizing")
+}
+
+func (n *Node) GetPredecessor() Entry {
+	fmt.Println("Getting Predecessor")
+	return n.Predecessor
+}
 
 type Finger struct {
 	// (n + 2^(i-1)) mod 2^m (1 <= i <= m)
@@ -85,13 +102,24 @@ type Finger struct {
 
 type Entry struct {
 	// IP Address of the entry
-	ipAddr string
+	IpAddr string
 
 	// Port of the entry
-	port string
+	Port string
 
 	// Identifer of the entry constructing by using a base hash function SHA-1 of IP Addr
-	identifier Identifier
+	Identifier Identifier
+}
+
+func NewEntry(ipAddr, port string) *Entry {
+	addr := ipAddr + ":" + port
+	hash := hashString(addr)
+	entry := &Entry{
+		IpAddr:     ipAddr,
+		Port:       port,
+		Identifier: hash,
+	}
+	return entry
 }
 
 func (n *Node) findSuccessor(ctx context.Context, id Identifier) (*Entry, error) {
@@ -112,15 +140,6 @@ func closestPrecedingNode(id Identifier) *Entry {
 
 func withinFingerRange(n, successor Identifier) bool {
 	return true
-}
-
-func NewEntry(ipAddr, port string, identifier Identifier) *Entry {
-	newEntry := Entry{
-		ipAddr,
-		port,
-		identifier,
-	}
-	return &newEntry
 }
 
 func NewNode() {

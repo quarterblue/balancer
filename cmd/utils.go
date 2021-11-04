@@ -5,6 +5,7 @@ import (
 	"log"
 	"math/big"
 	"net"
+	"net/rpc"
 )
 
 // Returns the hashed value of the string, converted into big integer
@@ -33,4 +34,20 @@ func between(start, elt, end *big.Int, inclusive bool) bool {
 	} else {
 		return start.Cmp(elt) < 0 || elt.Cmp(end) < 0 || (inclusive && elt.Cmp(end) == 0)
 	}
+}
+
+func call(address string, method string, request Request, response interface{}) error {
+	client, err := rpc.DialHTTP("tcp", address)
+	if err != nil {
+		log.Printf("Error connecting: %v", err)
+		return err
+	}
+	defer client.Close()
+
+	if err = client.Call(method, request, response); err != nil {
+		log.Printf("Client call: %s, %v", method, err)
+		return err
+	}
+
+	return nil
 }

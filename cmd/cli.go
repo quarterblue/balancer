@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"log"
-	"net/rpc"
 	"os"
 	"strings"
 	"sync"
@@ -30,22 +29,6 @@ type Settings struct {
 type Request struct {
 	Key   string
 	Value string
-}
-
-func call(address string, method string, request Request, response interface{}) error {
-	client, err := rpc.DialHTTP("tcp", address)
-	if err != nil {
-		log.Printf("Error connecting: %v", err)
-		return err
-	}
-	defer client.Close()
-
-	if err = client.Call(method, request, response); err != nil {
-		log.Printf("Client call: %s, %v", method, err)
-		return err
-	}
-
-	return nil
 }
 
 func Looper(s Settings) {
@@ -99,7 +82,9 @@ func Looper(s Settings) {
 			continue
 		}
 
-		switch args[0] {
+		command := args[0]
+
+		switch command {
 		case "ping":
 			targetAddr := args[1]
 			msg := args[2]
@@ -150,8 +135,12 @@ func Looper(s Settings) {
 			store.mutex.RUnlock()
 
 		case "join":
-			targetAddr := args[1]
+			targetAddr := strings.SplitN(args[1], ":", 2)
 			fmt.Printf("Joining Address: %s\n", targetAddr)
+			newEntry := NewEntry(targetAddr[0], targetAddr[1])
+			chord.Successor = *newEntry
+			chord.SuccessorList = append(chord.SuccessorList, &chord.Successor)
+			fmt.Printf("Successfully joined Address: %s\n", chord.Successor.IpAddr)
 
 		default:
 			fmt.Println("Invalid command.")
