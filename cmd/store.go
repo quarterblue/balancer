@@ -57,8 +57,9 @@ type RPCServer struct {
 	Settings Settings
 }
 
-func (r *RPCServer) init(address string, store *Store) {
+func (r *RPCServer) init(address string, store *Store, node *Node) {
 	rpc.Register(store)
+	rpc.Register(node)
 	rpc.HandleHTTP()
 	addr := r.Settings.Address + ":" + r.Settings.Port
 	fmt.Println("Listening on: ", addr)

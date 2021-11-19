@@ -16,7 +16,7 @@ type Identifier *big.Int
 
 type FingerTable map[string]Finger
 
-// Interface of the Chord Node, requires implementation of all node functionalities described in the paper
+// Interface of the Chord Node RPC, requires implementation of all node functionalities described in the paper
 type ChordNode interface {
 	FindSuccessor(Identifier) Node
 	ClosestPrecedingNode(Identifier) Node
@@ -69,21 +69,26 @@ func NewChordNode(ipAddr, port string) *Node {
 	return node
 }
 
-func (n *Node) GetSuccessor() *Entry {
-	return &n.Successor
+func (n *Node) GetSuccessor(req Request, response *Entry) error {
+	*response = n.Successor
+	return nil
 }
 
-func (n *Node) GetSuccessorList() []*Entry {
-	return n.SuccessorList
+func (n *Node) GetSuccessorList(req Request, response *[]*Entry) error {
+	*response = n.SuccessorList
+	return nil
 }
 
-func (n *Node) Stabilize() {
+func (n *Node) stabilize() {
+	successor := n.Successor
+	fmt.Println(successor)
 	fmt.Println("Stabilizing")
 }
 
-func (n *Node) GetPredecessor() Entry {
+func (n *Node) GetPredecessor(req Request, response *Entry) error {
 	fmt.Println("Getting Predecessor")
-	return n.Predecessor
+	*response = n.Predecessor
+	return nil
 }
 
 type Finger struct {
@@ -120,6 +125,10 @@ func NewEntry(ipAddr, port string) *Entry {
 		Identifier: hash,
 	}
 	return entry
+}
+
+func (e *Entry) IpAddrString() string {
+	return e.IpAddr + ":" + e.Port
 }
 
 func (n *Node) findSuccessor(ctx context.Context, id Identifier) (*Entry, error) {

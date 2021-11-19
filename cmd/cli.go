@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Ident [20]byte
@@ -29,6 +30,25 @@ type Settings struct {
 type Request struct {
 	Key   string
 	Value string
+}
+
+type Response struct {
+	Entry Entry
+	Value string
+	Ok    bool
+}
+
+func StabilizeLoop(done chan interface{}, chord *Node) {
+Loop:
+	for {
+		select {
+		case <-done:
+			break Loop
+		default:
+			time.Sleep(1 * time.Second)
+			chord.stabilize()
+		}
+	}
 }
 
 func Looper(s Settings) {
@@ -63,7 +83,11 @@ func Looper(s Settings) {
 	}
 
 	// Listen for RPC requests in a separate go routine
-	go r.init("127.0.0.1:3001", store)
+	go r.init("127.0.0.1:3001", store, chord)
+
+	done := make(chan interface{})
+
+	go StabilizeLoop(done, chord)
 
 	log.Printf("Interactive shell")
 	log.Printf("Commands: ping, get, post")
