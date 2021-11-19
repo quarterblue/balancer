@@ -4,7 +4,7 @@ import (
 	"flag"
 	"os"
 
-	"github.com/quarterblue/chord-dht/cmd"
+	"github.com/quarterblue/balancer/cmd"
 )
 
 func main() {

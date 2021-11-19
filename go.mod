@@ -1,3 +1,3 @@
-module github.com/quarterblue/chord-dht
+module github.com/quarterblue/balancer
 
 go 1.17
