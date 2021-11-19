@@ -50,6 +50,13 @@ $ [balancer] CMD-> get compare
 $ [balancer] CMD-> value: merkletree
 ```
 
+## References
+
+- <a href="https://pdos.csail.mit.edu/papers/ton:chord/paper-ton.pdf">Chord: A Scalable Peer-to-peer Lookup Protocol for Internet Applications</a>
+- <a href="https://ai.googleblog.com/2017/04/consistent-hashing-with-bounded-loads.html">Consistent Hashing with Bounded Loads </a>
+- <a href="https://arxiv.org/pdf/1908.08762.pdf">Revisiting Consistent Hashing With Bounded Loads</a>
+- <a href="https://www.gsd.inesc-id.pt/~jgpaiva/pubs/nca13.pdf">Rollerchain: a DHT for Efficient Replication</a>
+
 ## License
 
 Licensed under the MIT License.
