@@ -1,4 +1,4 @@
-package cmd
+package balancer
 
 import (
 	"crypto/sha1"
@@ -37,6 +37,22 @@ func between(start, elt, end *big.Int, inclusive bool) bool {
 }
 
 func call(address string, method string, request Request, response interface{}) error {
+	client, err := rpc.DialHTTP("tcp", address)
+	if err != nil {
+		log.Printf("Error connecting: %v", err)
+		return err
+	}
+	defer client.Close()
+
+	if err = client.Call(method, request, response); err != nil {
+		log.Printf("Client call: %s, %v", method, err)
+		return err
+	}
+
+	return nil
+}
+
+func calltwo(address string, method string, request SRequest, response interface{}) error {
 	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
 		log.Printf("Error connecting: %v", err)

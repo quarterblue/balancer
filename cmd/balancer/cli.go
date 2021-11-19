@@ -1,4 +1,4 @@
-package cmd
+package balancer
 
 import (
 	"bufio"
@@ -30,6 +30,15 @@ type Settings struct {
 type Request struct {
 	Key   string
 	Value string
+}
+
+type SRequest struct {
+}
+
+type SResponse struct {
+	predecessor   Entry
+	successor     Entry
+	successorList []Entry
 }
 
 type Response struct {
@@ -66,11 +75,18 @@ func Looper(s Settings) {
 	fmt.Println("Address full:")
 	fmt.Println(addr)
 
-	chord := NewChordNode(s.Address, s.Port)
-	fmt.Println(chord)
+	addrSplit := strings.SplitN(s.Join, ":", 2)
+
+	successor := &Entry{
+		IpAddr:     addrSplit[0],
+		Port:       addrSplit[1],
+		Identifier: hashString(s.Join),
+	}
+
+	chord := NewChordNode(s.Address, s.Port, successor)
 
 	// New RPC Server with the configured settings
-	r := RPCServer{
+	rpc := RPCServer{
 		Settings: s,
 	}
 
@@ -83,11 +99,11 @@ func Looper(s Settings) {
 	}
 
 	// Listen for RPC requests in a separate go routine
-	go r.init("127.0.0.1:3001", store, chord)
+	go rpc.init("127.0.0.1:3001", store, chord)
 
-	done := make(chan interface{})
+	// done := make(chan interface{})
 
-	go StabilizeLoop(done, chord)
+	// go StabilizeLoop(done, chord)
 
 	log.Printf("Interactive shell")
 	log.Printf("Commands: ping, get, post")
@@ -162,9 +178,9 @@ func Looper(s Settings) {
 			targetAddr := strings.SplitN(args[1], ":", 2)
 			fmt.Printf("Joining Address: %s\n", targetAddr)
 			newEntry := NewEntry(targetAddr[0], targetAddr[1])
-			chord.Successor = *newEntry
-			chord.SuccessorList = append(chord.SuccessorList, &chord.Successor)
-			fmt.Printf("Successfully joined Address: %s\n", chord.Successor.IpAddr)
+			chord.SuccessorList[1] = newEntry
+			chord.SuccessorList = append(chord.SuccessorList, chord.SuccessorList[1])
+			fmt.Printf("Successfully joined Address: %s\n", chord.SuccessorList[1].IpAddr)
 
 		default:
 			fmt.Println("Invalid command.")

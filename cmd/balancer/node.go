@@ -1,8 +1,9 @@
-package cmd
+package balancer
 
 import (
 	"context"
 	"fmt"
+	"log"
 	"math/big"
 	"sync"
 )
@@ -13,8 +14,6 @@ const sListSize = 5
 // m-bit hash of the node IP Addr or the key (Default uses SHA-1)
 // current implementation stores a big int casted from the m-bit hash bytes
 type Identifier *big.Int
-
-type FingerTable map[string]Finger
 
 // Interface of the Chord Node RPC, requires implementation of all node functionalities described in the paper
 type ChordNode interface {
@@ -30,35 +29,33 @@ type ChordNode interface {
 
 // Implementation of the Chord Node
 type Node struct {
-	// The finger route table described in the paper; maintains up to m entries (nodes)
-	Finger FingerTable
-
-	// The array of n first successors; this is to replicate the successors to deal with failures in nodes
-	SuccessorList []*Entry
-
-	// The next node on the identifier circle; finger[1].node
-	Successor Entry
-
-	// The previous node on the identifier circle
-	Predecessor Entry
-
-	// The m-bit identifier of the node
-	Identifier Identifier
-
 	// IP Address of the node
 	IpAddr string
 
 	// Port of the node
 	Port string
 
+	// The m-bit identifier of the node
+	Identifier Identifier
+
+	// The array of n first successors; this is to replicate the successors to deal with failures in nodes
+	SuccessorList []*Entry
+
+	// The finger route table described in the paper; maintains up to m entries (nodes)
+	Finger FingerTable
+
+	// The previous node on the identifier circle
+	Predecessor Entry
+
 	// Mutex for protecting
 	Mutex sync.RWMutex
 }
 
-func NewChordNode(ipAddr, port string) *Node {
+func NewChordNode(ipAddr, port string, successor *Entry) *Node {
 	addr := ipAddr + ":" + port
 	iden := hashString(addr)
-	sList := []*Entry{}
+
+	sList := []*Entry{successor}
 	node := &Node{
 		IpAddr:        ipAddr,
 		Port:          port,
@@ -70,7 +67,7 @@ func NewChordNode(ipAddr, port string) *Node {
 }
 
 func (n *Node) GetSuccessor(req Request, response *Entry) error {
-	*response = n.Successor
+	*response = *n.SuccessorList[1]
 	return nil
 }
 
@@ -80,55 +77,39 @@ func (n *Node) GetSuccessorList(req Request, response *[]*Entry) error {
 }
 
 func (n *Node) stabilize() {
-	successor := n.Successor
-	fmt.Println(successor)
+	successor := n.successor()
+
+	request := SRequest{}
+	response := &SResponse{}
+
+	if err := calltwo(successor.IpAddrString(), "Node.GetPredecessor", request, &response); err != nil {
+		log.Fatalf("Calling Node.GetPredecessor: %v", err)
+	}
+
+	// if (x E (n, successor))
+	if between(n.Identifier, response.successor.Identifier, n.SuccessorList[1].Identifier, true) {
+		fmt.Println("its true")
+	}
+
+	fmt.Println(response.successor)
 	fmt.Println("Stabilizing")
 }
 
-func (n *Node) GetPredecessor(req Request, response *Entry) error {
+func (n *Node) predecessor() Entry {
+	return n.Predecessor
+}
+
+func (n *Node) GetPredecessor(req SRequest, response *SResponse) error {
 	fmt.Println("Getting Predecessor")
-	*response = n.Predecessor
+	s := SResponse{}
+	s.predecessor = n.predecessor()
+	*response = s
 	return nil
 }
 
-type Finger struct {
-	// (n + 2^(i-1)) mod 2^m (1 <= i <= m)
-	start int
-
-	// (n + 2^i - 1) mod 2^m
-	end int
-
-	// interval
-	interval [2]int
-
-	// succesor node
-	successor int
-}
-
-type Entry struct {
-	// IP Address of the entry
-	IpAddr string
-
-	// Port of the entry
-	Port string
-
-	// Identifer of the entry constructing by using a base hash function SHA-1 of IP Addr
-	Identifier Identifier
-}
-
-func NewEntry(ipAddr, port string) *Entry {
-	addr := ipAddr + ":" + port
-	hash := hashString(addr)
-	entry := &Entry{
-		IpAddr:     ipAddr,
-		Port:       port,
-		Identifier: hash,
-	}
-	return entry
-}
-
-func (e *Entry) IpAddrString() string {
-	return e.IpAddr + ":" + e.Port
+func (n *Node) successor() *Entry {
+	return n.SuccessorList[1]
+	// return n.Finger[1].successor
 }
 
 func (n *Node) findSuccessor(ctx context.Context, id Identifier) (*Entry, error) {
@@ -153,9 +134,4 @@ func withinFingerRange(n, successor Identifier) bool {
 
 func NewNode() {
 
-}
-
-func InitFingerTable() (FingerTable, error) {
-	newFT := make(map[string]Finger)
-	return newFT, nil
 }
