@@ -1,7 +1,6 @@
 package balancer
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"math/big"
@@ -13,16 +12,16 @@ const sListSize = 5
 
 // m-bit hash of the node IP Addr or the key (Default uses SHA-1)
 // current implementation stores a big int casted from the m-bit hash bytes
-type Identifier *big.Int
+// type Identifier *big.Int
 
 // Interface of the Chord Node RPC, requires implementation of all node functionalities described in the paper
 type ChordNode interface {
-	FindSuccessor(Identifier) Node
-	ClosestPrecedingNode(Identifier) Node
+	FindSuccessor() Node
+	ClosestPrecedingNode() Node
 	Create()
-	Join(Identifier)
+	Join()
 	Stabilize()
-	Notify(Identifier)
+	Notify()
 	FixFinger()
 	CheckPredecessor() bool
 }
@@ -35,8 +34,8 @@ type Node struct {
 	// Port of the node
 	Port string
 
-	// The m-bit identifier of the node
-	Identifier Identifier
+	// The m-bit identifier of the node stored as big.Int
+	Identifier *big.Int
 
 	// The array of n first successors; this is to replicate the successors to deal with failures in nodes
 	SuccessorList []*Entry
@@ -67,7 +66,7 @@ func NewChordNode(ipAddr, port string, successor *Entry) *Node {
 }
 
 func (n *Node) GetSuccessor(req Request, response *Entry) error {
-	*response = *n.SuccessorList[1]
+	*response = *n.SuccessorList[0]
 	return nil
 }
 
@@ -78,6 +77,11 @@ func (n *Node) GetSuccessorList(req Request, response *[]*Entry) error {
 
 func (n *Node) stabilize() {
 	successor := n.successor()
+	fmt.Println("Stabilizing")
+	// Same identifier
+	if successor.Identifier.Cmp(n.Identifier) == 0 {
+		return
+	}
 
 	request := SRequest{}
 	response := &SResponse{}
@@ -87,12 +91,21 @@ func (n *Node) stabilize() {
 	}
 
 	// if (x E (n, successor))
-	if between(n.Identifier, response.successor.Identifier, n.SuccessorList[1].Identifier, true) {
+	if between(n.Identifier, response.Successor.Identifier, n.SuccessorList[0].Identifier, true) {
 		fmt.Println("its true")
+
+		newSuccessor := &Entry{
+			IpAddr:     response.Predecessor.IpAddr,
+			Port:       response.Predecessor.Port,
+			Identifier: response.Predecessor.Identifier,
+		}
+
+		n.SuccessorList = append([]*Entry{newSuccessor}, n.SuccessorList...)
 	}
 
-	fmt.Println(response.successor)
-	fmt.Println("Stabilizing")
+	n.SuccessorList[0].notify(n)
+
+	fmt.Println(response.Successor)
 }
 
 func (n *Node) predecessor() Entry {
@@ -102,33 +115,38 @@ func (n *Node) predecessor() Entry {
 func (n *Node) GetPredecessor(req SRequest, response *SResponse) error {
 	fmt.Println("Getting Predecessor")
 	s := SResponse{}
-	s.predecessor = n.predecessor()
+	s.Predecessor = n.predecessor()
 	*response = s
 	return nil
 }
 
 func (n *Node) successor() *Entry {
-	return n.SuccessorList[1]
+	return n.SuccessorList[0]
 	// return n.Finger[1].successor
 }
-
-func (n *Node) findSuccessor(ctx context.Context, id Identifier) (*Entry, error) {
-	if withinFingerRange(n.Identifier, id) {
-		// return n.finger[id], nil
-		return nil, nil
-	} else {
-		// nPrime := closestPrecedingNode(id)
-		// return nPrime.findSuccessor(ctx, id)
-
-		return nil, nil
+func (n *Node) FindSuccessor(req SRequest, response *SResponse) error {
+	if between(n.Identifier, response.Successor.Identifier, n.SuccessorList[0].Identifier, true) {
 	}
-}
-
-func closestPrecedingNode(id Identifier) *Entry {
 	return nil
 }
 
-func withinFingerRange(n, successor Identifier) bool {
+// func (n *Node) findSuccessor(ctx context.Context, id *big.Int) (*Entry, error) {
+// 	if withinFingerRange(n.Identifier, id) {
+// 		// return n.finger[id], nil
+// 		return nil, nil
+// 	} else {
+// 		// nPrime := closestPrecedingNode(id)
+// 		// return nPrime.findSuccessor(ctx, id)
+
+// 		return nil, nil
+// 	}
+// }
+
+func closestPrecedingNode(id *big.Int) *Entry {
+	return nil
+}
+
+func withinFingerRange(n, successor *big.Int) bool {
 	return true
 }
 

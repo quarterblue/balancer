@@ -36,9 +36,9 @@ type SRequest struct {
 }
 
 type SResponse struct {
-	predecessor   Entry
-	successor     Entry
-	successorList []Entry
+	Predecessor   Entry
+	Successor     Entry
+	SuccessorList []Entry
 }
 
 type Response struct {
@@ -75,12 +75,24 @@ func Looper(s Settings) {
 	fmt.Println("Address full:")
 	fmt.Println(addr)
 
-	addrSplit := strings.SplitN(s.Join, ":", 2)
+	var successor *Entry
 
-	successor := &Entry{
-		IpAddr:     addrSplit[0],
-		Port:       addrSplit[1],
-		Identifier: hashString(s.Join),
+	// Create a new ring
+	if s.Ring {
+		successor = &Entry{
+			IpAddr:     s.Address,
+			Port:       s.Port,
+			Identifier: hashString(AddrToIpPort(s.Address, s.Port)),
+		}
+	} else {
+		// Join a ring specified
+		joinAddrSplit := strings.SplitN(s.Join, ":", 2)
+
+		successor = &Entry{
+			IpAddr:     joinAddrSplit[0],
+			Port:       joinAddrSplit[1],
+			Identifier: hashString(s.Join),
+		}
 	}
 
 	chord := NewChordNode(s.Address, s.Port, successor)
@@ -101,9 +113,9 @@ func Looper(s Settings) {
 	// Listen for RPC requests in a separate go routine
 	go rpc.init("127.0.0.1:3001", store, chord)
 
-	// done := make(chan interface{})
+	done := make(chan interface{})
 
-	// go StabilizeLoop(done, chord)
+	go StabilizeLoop(done, chord)
 
 	log.Printf("Interactive shell")
 	log.Printf("Commands: ping, get, post")

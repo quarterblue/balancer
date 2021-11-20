@@ -6,7 +6,17 @@ import (
 	"math/big"
 	"net"
 	"net/rpc"
+	"strings"
 )
+
+func AddrToIpPort(ipAddr, port string) string {
+	return ipAddr + ":" + port
+}
+
+func IpPortToAddr(ipPort string) (ipAddr, port string) {
+	s := strings.SplitN(ipPort, ":", 2)
+	return s[0], s[1]
+}
 
 // Returns the hashed value of the string, converted into big integer
 func hashString(elt string) *big.Int {

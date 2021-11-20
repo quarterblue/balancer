@@ -1,5 +1,10 @@
 package balancer
 
+import (
+	"fmt"
+	"math/big"
+)
+
 type Entry struct {
 	// IP Address of the entry
 	IpAddr string
@@ -8,7 +13,7 @@ type Entry struct {
 	Port string
 
 	// Identifer of the entry constructing by using a base hash function SHA-1 of IP Addr
-	Identifier Identifier
+	Identifier *big.Int
 }
 
 func NewEntry(ipAddr, port string) *Entry {
@@ -24,4 +29,8 @@ func NewEntry(ipAddr, port string) *Entry {
 
 func (e *Entry) IpAddrString() string {
 	return e.IpAddr + ":" + e.Port
+}
+
+func (e *Entry) notify(n *Node) {
+	fmt.Println("Hello")
 }
