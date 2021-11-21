@@ -33,7 +33,8 @@ To use as a `CLI key-value storage`:
 ```shell
 $ git clone github.com/quarterblue/balancer
 $ cd balancer/
-$ go run main.go
+$ go mod download
+$ go build -o /balancer
 ```
 
 ## Usage
