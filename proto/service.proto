@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package proto;
+
+message KVRequest {
+	string key = 1;
+    string value = 2;
+}
+
+message KVResponse {
+    string value = 1;
+    string msg = 2;
+    bool ping = 3;
+}
+
+service AddService {
+    rpc Ping(KVRequest) returns (KVResponse);
+    rpc Get(KVRequest) returns (KVResponse);
+    rpc Put(KVRequest) returns (KVResponse);
+    rpc Delete(KVRequest) returns (KVResponse);
+}

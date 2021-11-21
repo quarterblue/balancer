@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/quarterblue/balancer/proto"
 )
 
 type Ident [20]byte
@@ -113,9 +115,9 @@ func Looper(s Settings) {
 	// Listen for RPC requests in a separate go routine
 	go rpc.init("127.0.0.1:3001", store, chord)
 
-	done := make(chan interface{})
+	// done := make(chan interface{})
 
-	go StabilizeLoop(done, chord)
+	// go StabilizeLoop(done, chord)
 
 	log.Printf("Interactive shell")
 	log.Printf("Commands: ping, get, post")
@@ -139,45 +141,56 @@ func Looper(s Settings) {
 		switch command {
 		case "ping":
 			targetAddr := args[1]
-			msg := args[2]
 
-			response := ""
-			request := &Request{
-				Key:   msg,
+			var response *proto.KVResponse
+			var err error
+			request := &proto.KVRequest{
+				Key:   "",
 				Value: "",
 			}
-			if err := call(targetAddr, "Store.Ping", *request, &response); err != nil {
+
+			if response, err = gRpcCall(targetAddr, "ping", request); err != nil {
 				log.Fatalf("Calling Store.Ping: %v", err)
 			}
-			fmt.Println(response)
+
+			log.Println(response)
+
 		case "get":
 			targetAddr := args[1]
 			key := args[2]
 
-			response := ""
-			request := &Request{
+			var response *proto.KVResponse
+			var err error
+
+			request := &proto.KVRequest{
 				Key:   key,
 				Value: "",
 			}
-			if err := call(targetAddr, "Store.Get", *request, &response); err != nil {
+			if response, err = gRpcCall(targetAddr, "get", request); err != nil {
 				log.Fatalf("Calling Store.Get: %v", err)
 			}
-			fmt.Println(response)
+
+			log.Println(response)
+
 		case "put":
 			targetAddr := args[1]
 			key := args[2]
 			value := args[3]
 
-			request := &Request{
+			var response *proto.KVResponse
+			var err error
+
+			request := &proto.KVRequest{
 				Key:   key,
 				Value: value,
 			}
 
-			response := ""
-			if err := call(targetAddr, "Store.Put", *request, &response); err != nil {
+			if response, err = gRpcCall(targetAddr, "put", request); err != nil {
 				log.Fatalf("Calling Store.Put: %v", err)
 			}
-			fmt.Println(response)
+
+			log.Println(response)
+
 		case "dump":
 			fmt.Println("Dumping Results:")
 			store.mutex.RLock()
