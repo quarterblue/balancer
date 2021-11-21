@@ -19,12 +19,12 @@ type Node struct {
 func NewNode(ipAddr, port string) *Node {
 	addr := ipAddr + ":" + port
 	hash := hashString(addr)
-	entry := &Node{
+	node := &Node{
 		IpAddr:     ipAddr,
 		Port:       port,
 		Identifier: hash,
 	}
-	return entry
+	return node
 }
 
 func (n *Node) IpAddrString() string {

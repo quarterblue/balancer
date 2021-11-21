@@ -27,26 +27,6 @@ type Settings struct {
 	Address string
 }
 
-type Request struct {
-	Key   string
-	Value string
-}
-
-type SRequest struct {
-}
-
-type SResponse struct {
-	Predecessor   Node
-	Successor     Node
-	SuccessorList []Node
-}
-
-type Response struct {
-	Entry Node
-	Value string
-	Ok    bool
-}
-
 func StabilizeLoop(done chan interface{}, chord *Chord) {
 Loop:
 	for {
