@@ -12,8 +12,6 @@ import (
 	"github.com/quarterblue/balancer/proto"
 )
 
-type Ident [20]byte
-
 // Configuration settings
 type Settings struct {
 	// Represents the port this node will listen on
@@ -38,18 +36,18 @@ type SRequest struct {
 }
 
 type SResponse struct {
-	Predecessor   Entry
-	Successor     Entry
-	SuccessorList []Entry
+	Predecessor   Node
+	Successor     Node
+	SuccessorList []Node
 }
 
 type Response struct {
-	Entry Entry
+	Entry Node
 	Value string
 	Ok    bool
 }
 
-func StabilizeLoop(done chan interface{}, chord *Node) {
+func StabilizeLoop(done chan interface{}, chord *Chord) {
 Loop:
 	for {
 		select {
@@ -77,11 +75,11 @@ func Looper(s Settings) {
 	fmt.Println("Address full:")
 	fmt.Println(addr)
 
-	var successor *Entry
+	var successor *Node
 
 	// Create a new ring
 	if s.Ring {
-		successor = &Entry{
+		successor = &Node{
 			IpAddr:     s.Address,
 			Port:       s.Port,
 			Identifier: hashString(AddrToIpPort(s.Address, s.Port)),
@@ -90,7 +88,7 @@ func Looper(s Settings) {
 		// Join a ring specified
 		joinAddrSplit := strings.SplitN(s.Join, ":", 2)
 
-		successor = &Entry{
+		successor = &Node{
 			IpAddr:     joinAddrSplit[0],
 			Port:       joinAddrSplit[1],
 			Identifier: hashString(s.Join),
@@ -138,12 +136,13 @@ func Looper(s Settings) {
 
 		command := args[0]
 
+		var response *proto.KVResponse
+		var err error
+
 		switch command {
 		case "ping":
 			targetAddr := args[1]
 
-			var response *proto.KVResponse
-			var err error
 			request := &proto.KVRequest{
 				Key:   "",
 				Value: "",
@@ -159,9 +158,6 @@ func Looper(s Settings) {
 			targetAddr := args[1]
 			key := args[2]
 
-			var response *proto.KVResponse
-			var err error
-
 			request := &proto.KVRequest{
 				Key:   key,
 				Value: "",
@@ -176,9 +172,6 @@ func Looper(s Settings) {
 			targetAddr := args[1]
 			key := args[2]
 			value := args[3]
-
-			var response *proto.KVResponse
-			var err error
 
 			request := &proto.KVRequest{
 				Key:   key,

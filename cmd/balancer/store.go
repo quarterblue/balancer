@@ -86,7 +86,7 @@ type RPCServer struct {
 	Settings Settings
 }
 
-func (r *RPCServer) init(address string, store *Store, node *Node) {
+func (r *RPCServer) init(address string, store *Store, node *Chord) {
 	addr := r.Settings.Address + ":" + r.Settings.Port
 	listener, err := net.Listen("tcp", addr)
 	fmt.Println("Listening on: ", addr)

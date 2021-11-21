@@ -13,7 +13,7 @@ type Finger struct {
 	interval [2]int
 
 	// succesor node
-	successor *Entry
+	successor *Node
 }
 
 func InitFingerTable() (FingerTable, error) {

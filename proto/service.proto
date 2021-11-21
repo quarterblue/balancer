@@ -13,9 +13,28 @@ message KVResponse {
     bool ping = 3;
 }
 
+message NodeRequest{
+    string node = 1;
+}
+
+message Node {
+    string ipaddr = 1;
+    string port = 2;
+}
+
+message SuccessorResponse {
+    repeated Node successorlist = 1;
+}
+
 service AddService {
     rpc Ping(KVRequest) returns (KVResponse);
     rpc Get(KVRequest) returns (KVResponse);
     rpc Put(KVRequest) returns (KVResponse);
     rpc Delete(KVRequest) returns (KVResponse);
+}
+
+service EntryService {
+    rpc Predecessor(NodeRequest) returns (Node);
+    rpc SuccessorList(NodeRequest) returns (SuccessorResponse);
+    rpc FindSuccessor(NodeRequest) returns (Node);
 }
