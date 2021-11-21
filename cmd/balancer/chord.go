@@ -1,10 +1,13 @@
 package balancer
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math/big"
 	"sync"
+
+	"github.com/quarterblue/balancer/proto"
 )
 
 // Successor list size
@@ -30,16 +33,16 @@ type ChordNode interface {
 
 // Implementation of the Chord Node
 type Chord struct {
-	// IP Address of the node
+	// IP Address of the chord node
 	IpAddr string
 
-	// Port of the node
+	// Port of the chord node
 	Port string
 
-	// The m-bit identifier of the node stored as big.Int
+	// The m-bit identifier of the chord node stored as big.Int
 	Identifier *big.Int
 
-	// The array of n first successors; this is to replicate the successors to deal with failures in nodes
+	// Slice of n first successors; this is to replicate the successors to deal with failures in nodes
 	SuccessorList []*Node
 
 	// The finger route table described in the paper; maintains up to m entries (nodes)
@@ -73,9 +76,9 @@ func NewChordNode(ipAddr, port string, successor *Node) *Chord {
 	return chord
 }
 
-func (c *Chord) Join(entry *Node) {
+func (c *Chord) Join(node *Node) {
 	c.Predecessor = nil
-	succesor := entry.FindSuccessor(c)
+	succesor := node.FindSuccessor(c)
 	fmt.Println(succesor)
 }
 
@@ -138,10 +141,13 @@ func (c *Chord) successor() *Node {
 	return c.SuccessorList[0]
 	// return n.Finger[1].successor
 }
-func (c *Chord) FindSuccessor(req SRequest, response *SResponse) error {
+
+func (c *Chord) FindSuccessor(context.Context, *proto.NodeRequest) (*proto.Node, error) {
+
 	if between(c.Identifier, response.Successor.Identifier, c.SuccessorList[0].Identifier, true) {
+		fmt.Println("True")
 	}
-	return nil
+	return nil, nil
 }
 
 // func (n *Node) findSuccessor(ctx context.Context, id *big.Int) (*Entry, error) {
@@ -162,8 +168,4 @@ func closestPrecedingNode(id *big.Int) *Node {
 
 func withinFingerRange(n, successor *big.Int) bool {
 	return true
-}
-
-func NewNode() {
-
 }

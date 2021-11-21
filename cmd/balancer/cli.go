@@ -195,7 +195,7 @@ func Looper(s Settings) {
 		case "join":
 			targetAddr := strings.SplitN(args[1], ":", 2)
 			fmt.Printf("Joining Address: %s\n", targetAddr)
-			newEntry := NewEntry(targetAddr[0], targetAddr[1])
+			newEntry := NewNode(targetAddr[0], targetAddr[1])
 			chord.SuccessorList[1] = newEntry
 			chord.SuccessorList = append(chord.SuccessorList, chord.SuccessorList[1])
 			fmt.Printf("Successfully joined Address: %s\n", chord.SuccessorList[1].IpAddr)

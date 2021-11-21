@@ -126,27 +126,164 @@ func (m *KVResponse) GetPing() bool {
 	return false
 }
 
+type NodeRequest struct {
+	Node                 string   `protobuf:"bytes,1,opt,name=node,proto3" json:"node,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *NodeRequest) Reset()         { *m = NodeRequest{} }
+func (m *NodeRequest) String() string { return proto.CompactTextString(m) }
+func (*NodeRequest) ProtoMessage()    {}
+func (*NodeRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a0b84a42fa06f626, []int{2}
+}
+
+func (m *NodeRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_NodeRequest.Unmarshal(m, b)
+}
+func (m *NodeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_NodeRequest.Marshal(b, m, deterministic)
+}
+func (m *NodeRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_NodeRequest.Merge(m, src)
+}
+func (m *NodeRequest) XXX_Size() int {
+	return xxx_messageInfo_NodeRequest.Size(m)
+}
+func (m *NodeRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_NodeRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_NodeRequest proto.InternalMessageInfo
+
+func (m *NodeRequest) GetNode() string {
+	if m != nil {
+		return m.Node
+	}
+	return ""
+}
+
+type Node struct {
+	Ipaddr               string   `protobuf:"bytes,1,opt,name=ipaddr,proto3" json:"ipaddr,omitempty"`
+	Port                 string   `protobuf:"bytes,2,opt,name=port,proto3" json:"port,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Node) Reset()         { *m = Node{} }
+func (m *Node) String() string { return proto.CompactTextString(m) }
+func (*Node) ProtoMessage()    {}
+func (*Node) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a0b84a42fa06f626, []int{3}
+}
+
+func (m *Node) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Node.Unmarshal(m, b)
+}
+func (m *Node) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Node.Marshal(b, m, deterministic)
+}
+func (m *Node) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Node.Merge(m, src)
+}
+func (m *Node) XXX_Size() int {
+	return xxx_messageInfo_Node.Size(m)
+}
+func (m *Node) XXX_DiscardUnknown() {
+	xxx_messageInfo_Node.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Node proto.InternalMessageInfo
+
+func (m *Node) GetIpaddr() string {
+	if m != nil {
+		return m.Ipaddr
+	}
+	return ""
+}
+
+func (m *Node) GetPort() string {
+	if m != nil {
+		return m.Port
+	}
+	return ""
+}
+
+type SuccessorResponse struct {
+	Successorlist        []*Node  `protobuf:"bytes,1,rep,name=successorlist,proto3" json:"successorlist,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *SuccessorResponse) Reset()         { *m = SuccessorResponse{} }
+func (m *SuccessorResponse) String() string { return proto.CompactTextString(m) }
+func (*SuccessorResponse) ProtoMessage()    {}
+func (*SuccessorResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a0b84a42fa06f626, []int{4}
+}
+
+func (m *SuccessorResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SuccessorResponse.Unmarshal(m, b)
+}
+func (m *SuccessorResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SuccessorResponse.Marshal(b, m, deterministic)
+}
+func (m *SuccessorResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SuccessorResponse.Merge(m, src)
+}
+func (m *SuccessorResponse) XXX_Size() int {
+	return xxx_messageInfo_SuccessorResponse.Size(m)
+}
+func (m *SuccessorResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_SuccessorResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SuccessorResponse proto.InternalMessageInfo
+
+func (m *SuccessorResponse) GetSuccessorlist() []*Node {
+	if m != nil {
+		return m.Successorlist
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*KVRequest)(nil), "proto.KVRequest")
 	proto.RegisterType((*KVResponse)(nil), "proto.KVResponse")
+	proto.RegisterType((*NodeRequest)(nil), "proto.NodeRequest")
+	proto.RegisterType((*Node)(nil), "proto.Node")
+	proto.RegisterType((*SuccessorResponse)(nil), "proto.SuccessorResponse")
 }
 
 func init() { proto.RegisterFile("service.proto", fileDescriptor_a0b84a42fa06f626) }
 
 var fileDescriptor_a0b84a42fa06f626 = []byte{
-	// 191 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x2d, 0x4e, 0x2d, 0x2a,
-	0xcb, 0x4c, 0x4e, 0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x05, 0x53, 0x4a, 0xc6, 0x5c,
-	0x9c, 0xde, 0x61, 0x41, 0xa9, 0x85, 0xa5, 0xa9, 0xc5, 0x25, 0x42, 0x02, 0x5c, 0xcc, 0xd9, 0xa9,
-	0x95, 0x12, 0x8c, 0x0a, 0x8c, 0x1a, 0x9c, 0x41, 0x20, 0xa6, 0x90, 0x08, 0x17, 0x6b, 0x59, 0x62,
-	0x4e, 0x69, 0xaa, 0x04, 0x13, 0x58, 0x0c, 0xc2, 0x51, 0xf2, 0xe0, 0xe2, 0x02, 0x69, 0x2a, 0x2e,
-	0xc8, 0xcf, 0x2b, 0x4e, 0x45, 0xa8, 0x61, 0x44, 0x52, 0x03, 0x32, 0x2b, 0xb7, 0x38, 0x1d, 0xaa,
-	0x0f, 0xc4, 0x14, 0x12, 0xe2, 0x62, 0x29, 0xc8, 0xcc, 0x4b, 0x97, 0x60, 0x56, 0x60, 0xd4, 0xe0,
-	0x08, 0x02, 0xb3, 0x8d, 0x0e, 0x30, 0x72, 0x71, 0x39, 0xa6, 0xa4, 0x04, 0x43, 0x9c, 0x26, 0xa4,
-	0xcd, 0xc5, 0x12, 0x90, 0x99, 0x97, 0x2e, 0x24, 0x00, 0x71, 0xa4, 0x1e, 0xdc, 0x69, 0x52, 0x82,
-	0x48, 0x22, 0x50, 0x7b, 0xb5, 0xb8, 0x98, 0xdd, 0x53, 0x4b, 0x88, 0x56, 0x1b, 0x50, 0x4a, 0xa4,
-	0x5a, 0x5d, 0x2e, 0x36, 0x97, 0xd4, 0x9c, 0xd4, 0x92, 0x54, 0xa2, 0x94, 0x27, 0xb1, 0x81, 0x45,
-	0x8c, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0x46, 0xec, 0xdb, 0x65, 0x60, 0x01, 0x00, 0x00,
+	// 321 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x51, 0x41, 0x4b, 0xf3, 0x40,
+	0x10, 0x65, 0xbf, 0xa4, 0xe5, 0xeb, 0x84, 0x40, 0x3b, 0x88, 0x04, 0x4f, 0x35, 0xa7, 0xa2, 0x58,
+	0x34, 0x3d, 0x7b, 0x10, 0xa4, 0x0a, 0x8a, 0x94, 0x16, 0xbc, 0xd7, 0xee, 0x50, 0x16, 0x6b, 0x36,
+	0xee, 0x6e, 0x0a, 0xfe, 0x29, 0x7f, 0x83, 0x3f, 0x4d, 0x76, 0xb3, 0x89, 0x11, 0x05, 0x73, 0xca,
+	0xdb, 0x99, 0xf7, 0xde, 0xcc, 0xbc, 0x40, 0xac, 0x49, 0xed, 0xc5, 0x86, 0xa6, 0x85, 0x92, 0x46,
+	0x62, 0xcf, 0x7d, 0xd2, 0x19, 0x0c, 0xee, 0x1e, 0x97, 0xf4, 0x5a, 0x92, 0x36, 0x38, 0x84, 0xe0,
+	0x99, 0xde, 0x12, 0x36, 0x66, 0x93, 0xc1, 0xd2, 0x42, 0x3c, 0x80, 0xde, 0x7e, 0xbd, 0x2b, 0x29,
+	0xf9, 0xe7, 0x6a, 0xd5, 0x23, 0xbd, 0x05, 0xb0, 0x22, 0x5d, 0xc8, 0x5c, 0xd3, 0x17, 0x87, 0xb5,
+	0x38, 0xd6, 0xeb, 0x45, 0x6f, 0xbd, 0xce, 0x42, 0x44, 0x08, 0x0b, 0x91, 0x6f, 0x93, 0x60, 0xcc,
+	0x26, 0xff, 0x97, 0x0e, 0xa7, 0xc7, 0x10, 0x3d, 0x48, 0x4e, 0xf5, 0x02, 0x08, 0x61, 0x2e, 0x79,
+	0xed, 0xe4, 0x70, 0x9a, 0x41, 0x68, 0x29, 0x78, 0x08, 0x7d, 0x51, 0xac, 0x39, 0x57, 0xbe, 0xeb,
+	0x5f, 0xce, 0x56, 0x2a, 0xe3, 0x27, 0x39, 0x9c, 0xce, 0x61, 0xb4, 0x2a, 0x37, 0x1b, 0xd2, 0x5a,
+	0xaa, 0x66, 0xcf, 0x0b, 0x88, 0x75, 0x5d, 0xdc, 0x09, 0x6d, 0x12, 0x36, 0x0e, 0x26, 0x51, 0x16,
+	0x55, 0x81, 0x4c, 0xdd, 0x1e, 0xdf, 0x19, 0xd9, 0x07, 0x03, 0xb8, 0xe2, 0x7c, 0x55, 0x25, 0x87,
+	0xa7, 0x10, 0x2e, 0x44, 0xbe, 0xc5, 0xa1, 0x97, 0x34, 0xc9, 0x1d, 0x8d, 0x5a, 0x15, 0x3f, 0xee,
+	0x04, 0x82, 0x1b, 0x32, 0x9d, 0xb9, 0x8b, 0xb2, 0x23, 0xf7, 0x0c, 0xfa, 0xd7, 0xb4, 0x23, 0x43,
+	0x9d, 0xe8, 0xd9, 0x3b, 0xab, 0x22, 0xae, 0x6f, 0x98, 0x42, 0xb4, 0x50, 0xc4, 0xa9, 0xba, 0x12,
+	0xb1, 0x7d, 0xbd, 0x77, 0x69, 0x27, 0x82, 0x97, 0x10, 0x37, 0x51, 0xde, 0x0b, 0xfb, 0x8f, 0x7e,
+	0x51, 0x24, 0xbe, 0xf6, 0x33, 0xf4, 0x73, 0x88, 0xe7, 0x22, 0xe7, 0x4d, 0xe3, 0xcf, 0x81, 0x4f,
+	0x7d, 0x87, 0x67, 0x9f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x2a, 0xdc, 0x0a, 0x9e, 0xb0, 0x02, 0x00,
+	0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -331,6 +468,150 @@ var _AddService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Delete",
 			Handler:    _AddService_Delete_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "service.proto",
+}
+
+// NodeServiceClient is the client API for NodeService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type NodeServiceClient interface {
+	Predecessor(ctx context.Context, in *NodeRequest, opts ...grpc.CallOption) (*Node, error)
+	SuccessorList(ctx context.Context, in *NodeRequest, opts ...grpc.CallOption) (*SuccessorResponse, error)
+	FindSuccessor(ctx context.Context, in *NodeRequest, opts ...grpc.CallOption) (*Node, error)
+}
+
+type nodeServiceClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewNodeServiceClient(cc *grpc.ClientConn) NodeServiceClient {
+	return &nodeServiceClient{cc}
+}
+
+func (c *nodeServiceClient) Predecessor(ctx context.Context, in *NodeRequest, opts ...grpc.CallOption) (*Node, error) {
+	out := new(Node)
+	err := c.cc.Invoke(ctx, "/proto.NodeService/Predecessor", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeServiceClient) SuccessorList(ctx context.Context, in *NodeRequest, opts ...grpc.CallOption) (*SuccessorResponse, error) {
+	out := new(SuccessorResponse)
+	err := c.cc.Invoke(ctx, "/proto.NodeService/SuccessorList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeServiceClient) FindSuccessor(ctx context.Context, in *NodeRequest, opts ...grpc.CallOption) (*Node, error) {
+	out := new(Node)
+	err := c.cc.Invoke(ctx, "/proto.NodeService/FindSuccessor", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// NodeServiceServer is the server API for NodeService service.
+type NodeServiceServer interface {
+	Predecessor(context.Context, *NodeRequest) (*Node, error)
+	SuccessorList(context.Context, *NodeRequest) (*SuccessorResponse, error)
+	FindSuccessor(context.Context, *NodeRequest) (*Node, error)
+}
+
+// UnimplementedNodeServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedNodeServiceServer struct {
+}
+
+func (*UnimplementedNodeServiceServer) Predecessor(ctx context.Context, req *NodeRequest) (*Node, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Predecessor not implemented")
+}
+func (*UnimplementedNodeServiceServer) SuccessorList(ctx context.Context, req *NodeRequest) (*SuccessorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SuccessorList not implemented")
+}
+func (*UnimplementedNodeServiceServer) FindSuccessor(ctx context.Context, req *NodeRequest) (*Node, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FindSuccessor not implemented")
+}
+
+func RegisterNodeServiceServer(s *grpc.Server, srv NodeServiceServer) {
+	s.RegisterService(&_NodeService_serviceDesc, srv)
+}
+
+func _NodeService_Predecessor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).Predecessor(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.NodeService/Predecessor",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).Predecessor(ctx, req.(*NodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NodeService_SuccessorList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).SuccessorList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.NodeService/SuccessorList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).SuccessorList(ctx, req.(*NodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NodeService_FindSuccessor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).FindSuccessor(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.NodeService/FindSuccessor",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).FindSuccessor(ctx, req.(*NodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _NodeService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "proto.NodeService",
+	HandlerType: (*NodeServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Predecessor",
+			Handler:    _NodeService_Predecessor_Handler,
+		},
+		{
+			MethodName: "SuccessorList",
+			Handler:    _NodeService_SuccessorList_Handler,
+		},
+		{
+			MethodName: "FindSuccessor",
+			Handler:    _NodeService_FindSuccessor_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

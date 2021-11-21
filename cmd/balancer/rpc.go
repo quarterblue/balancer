@@ -46,3 +46,34 @@ func gRpcCall(addr, method string, request *proto.KVRequest) (*proto.KVResponse,
 
 	return response, nil
 }
+
+func gRpcNode(addr, method string, request *proto.NodeRequest) (*proto.Node, error) {
+	var response *proto.Node
+	var err error
+
+	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	client := proto.NewNodeServiceClient(conn)
+
+	ctx := context.Background()
+
+	switch method {
+	case "predecessor":
+		fmt.Println("Predecessor")
+		response, err = client.Predecessor(ctx, request)
+	case "successorlist":
+		fmt.Println("FindSuccesor")
+		response, err = client.FindSuccessor(ctx, request)
+	default:
+		return nil, errors.New("unrecognized method request")
+	}
+
+	if err != nil {
+		return nil, errors.New("gRPC Error")
+	}
+
+	return response, nil
+}

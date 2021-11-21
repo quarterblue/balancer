@@ -16,7 +16,7 @@ type Node struct {
 	Identifier *big.Int
 }
 
-func NewEntry(ipAddr, port string) *Node {
+func NewNode(ipAddr, port string) *Node {
 	addr := ipAddr + ":" + port
 	hash := hashString(addr)
 	entry := &Node{

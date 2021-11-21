@@ -33,7 +33,7 @@ service AddService {
     rpc Delete(KVRequest) returns (KVResponse);
 }
 
-service EntryService {
+service NodeService {
     rpc Predecessor(NodeRequest) returns (Node);
     rpc SuccessorList(NodeRequest) returns (SuccessorResponse);
     rpc FindSuccessor(NodeRequest) returns (Node);
