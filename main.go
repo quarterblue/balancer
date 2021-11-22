@@ -1,10 +1,11 @@
-package internal
+package main
 
 import (
 	"flag"
 	"fmt"
 	"os"
 
+	chord "github.com/quarterblue/balancer/internal/chord"
 	balancer "github.com/quarterblue/balancer/pkg"
 )
 
@@ -20,7 +21,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	s := Settings{
+	s := chord.Settings{
 		Port:    *port,
 		Ring:    *ring,
 		Join:    *join,
@@ -29,8 +30,10 @@ func main() {
 
 	// balancer.Looper(s)
 	fmt.Println(s)
-	hashed := balancer.HashFunc("172.38.2.40:3006")
+
+	hasher := balancer.XxHash{}
+	hashed := hasher.Hash([]byte("172.38.2.40:3006"))
 	fmt.Printf("Hashed: %d\n", hashed)
-	hashed2 := balancer.HashFunc("172.38.2.40:3007")
+	hashed2 := hasher.Hash([]byte("172.38.2.40:3007"))
 	fmt.Printf("Hashed: %d\n", hashed2)
 }
