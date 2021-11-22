@@ -156,7 +156,11 @@ func (c *Chord) Stabilize() {
 		c.SuccessorList = append([]*Node{newSuccessor}, c.SuccessorList...)
 	}
 
-	c.SuccessorList[0].notify(c)
+	c.SuccessorList[0].Notify(c)
+}
+
+func (c *Chord) Notify(ctx context.Context, request *pb.NodeRequest) (*pb.Node, error) {
+	return nil, nil
 }
 
 func (c *Chord) predecessor() *Node {
@@ -169,25 +173,16 @@ func (c *Chord) successor() *Node {
 
 func (c *Chord) FindSuccessor(ctx context.Context, request *pb.NodeRequest) (*pb.Node, error) {
 
-	// if between(c.Identifier, response.Successor.Identifier, c.SuccessorList[0].Identifier, true) {
-	// 	fmt.Println("True")
+	// pSucc := AddrToIpPort(request.Ipaddr, response.GetPort())
+	// pSuccHash := hashString(pSucc)
+
+	// if checkBetween(c.Identifier, pSuccHash, c.successor().Identifier, true) {
 	// }
+
 	return nil, nil
 }
 
-// func (n *Node) findSuccessor(ctx context.Context, id *big.Int) (*Entry, error) {
-// 	if withinFingerRange(n.Identifier, id) {
-// 		// return n.finger[id], nil
-// 		return nil, nil
-// 	} else {
-// 		// nPrime := closestPrecedingNode(id)
-// 		// return nPrime.findSuccessor(ctx, id)
-
-// 		return nil, nil
-// 	}
-// }
-
-func closestPrecedingNode(id *big.Int) *Node {
+func (c *Chord) closestPrecedingNode(id *big.Int) *Node {
 	return nil
 }
 

@@ -67,6 +67,9 @@ func gRpcNode(addr, method string, request *pb.NodeRequest) (*pb.Node, error) {
 	case "findsuccessor":
 		fmt.Println("FindSuccesor")
 		response, err = client.FindSuccessor(ctx, request)
+	case "notify":
+		fmt.Println("Notify")
+		response, err = client.Notify(ctx, request)
 	default:
 		return nil, errors.New("unrecognized method request")
 	}

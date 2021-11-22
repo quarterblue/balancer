@@ -2,7 +2,10 @@ package chord
 
 import (
 	"fmt"
+	"log"
 	"math/big"
+
+	pb "github.com/quarterblue/balancer/proto"
 )
 
 type Node struct {
@@ -31,17 +34,31 @@ func (n *Node) IpAddrString() string {
 	return n.IpAddr + ":" + n.Port
 }
 
-func (n *Node) notify(c *Chord) {
-	fmt.Println("Hello")
+func (n *Node) Notify(c *Chord) {
+	targetAddr := AddrToIpPort(n.IpAddr, n.Port)
+
+	request := &pb.NodeRequest{}
+	_, err := gRpcNode(targetAddr, "notify", request)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func (n *Node) FindSuccessor(c *Chord) *Node {
 	targetAddr := AddrToIpPort(n.IpAddr, n.Port)
 	fmt.Println(targetAddr)
 
-	// response, err := gRpcCall(targetAddr, "ping", request)
-	// if err != nil {
-	// 	log.Println("Calling Store.Ping: %v", err)
-	// }
-	return nil
+	request := &pb.NodeRequest{}
+
+	response, err := gRpcNode(targetAddr, "findsuccessor", request)
+
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	return &Node{
+		IpAddr:     response.GetIpaddr(),
+		Port:       response.GetPort(),
+		Identifier: hashString(AddrToIpPort(response.GetIpaddr(), response.GetPort())),
+	}
 }

@@ -17,6 +17,10 @@ message NodeRequest{
     string node = 1;
 }
 
+message NodeResponse {
+    bool notified = 1;
+}
+
 message Node {
     string ipaddr = 1;
     string port = 2;
@@ -37,4 +41,5 @@ service NodeService {
     rpc Predecessor(NodeRequest) returns (Node);
     rpc SuccessorList(NodeRequest) returns (SuccessorResponse);
     rpc FindSuccessor(NodeRequest) returns (Node);
+    rpc Notify(NodeRequest) returns (Node);
 }
