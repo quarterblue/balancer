@@ -123,34 +123,40 @@ func (c *Chord) GetSuccessorList(ctx context.Context, request *pb.NodeRequest) (
 	}, nil
 }
 
-func (c *Chord) stabilize() {
-	// successor := c.successor()
-	// fmt.Println("Stabilizing")
-	// // Same identifier
-	// if successor.Identifier.Cmp(c.Identifier) == 0 {
-	// 	return
-	// }
+func (c *Chord) Stabilize() {
+	fmt.Println("Stabilizing")
+	successor := c.successor()
 
-	// if err := calltwo(successor.IpAddrString(), "Node.GetPredecessor", request, &response); err != nil {
-	// 	log.Fatalf("Calling Node.GetPredecessor: %v", err)
-	// }
+	// Same identifier
+	if successor.Identifier.Cmp(c.Identifier) == 0 {
+		return
+	}
 
-	// // if (x E (n, successor))
-	// if between(c.Identifier, response.Successor.Identifier, c.SuccessorList[0].Identifier, true) {
-	// 	fmt.Println("its true")
+	request := &pb.NodeRequest{}
+	successorAddr := AddrToIpPort(successor.IpAddr, successor.Port)
 
-	// 	newSuccessor := &Node{
-	// 		IpAddr:     response.Predecessor.IpAddr,
-	// 		Port:       response.Predecessor.Port,
-	// 		Identifier: response.Predecessor.Identifier,
-	// 	}
+	response, err := gRpcNode(successorAddr, "predecessor", request)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
-	// 	c.SuccessorList = append([]*Node{newSuccessor}, c.SuccessorList...)
-	// }
+	pSucc := AddrToIpPort(response.GetIpaddr(), response.GetPort())
+	pSuccHash := hashString(pSucc)
 
-	// c.SuccessorList[0].notify(c)
+	// if (x E (n, successor))
+	if checkBetween(c.Identifier, pSuccHash, c.successor().Identifier, true) {
+		// successor = x;
+		newSuccessor := &Node{
+			IpAddr:     response.GetIpaddr(),
+			Port:       response.GetPort(),
+			Identifier: pSuccHash,
+		}
 
-	// fmt.Println(response.Successor)
+		c.SuccessorList = append([]*Node{newSuccessor}, c.SuccessorList...)
+	}
+
+	c.SuccessorList[0].notify(c)
 }
 
 func (c *Chord) predecessor() *Node {
@@ -159,7 +165,6 @@ func (c *Chord) predecessor() *Node {
 
 func (c *Chord) successor() *Node {
 	return c.SuccessorList[0]
-	// return n.Finger[1].successor
 }
 
 func (c *Chord) FindSuccessor(ctx context.Context, request *pb.NodeRequest) (*pb.Node, error) {

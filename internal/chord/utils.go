@@ -44,3 +44,11 @@ func between(start, elt, end *big.Int, inclusive bool) bool {
 		return start.Cmp(elt) < 0 || elt.Cmp(end) < 0 || (inclusive && elt.Cmp(end) == 0)
 	}
 }
+
+func checkBetween(start, x, end *big.Int, inclusive bool) bool {
+	if end.Cmp(start) > 0 {
+		return (start.Cmp(x) < 0 && x.Cmp(end) < 0) || (inclusive && x.Cmp(end) == 0)
+	} else {
+		return start.Cmp(x) < 0 || x.Cmp(end) < 0 || (inclusive && x.Cmp(end) == 0)
+	}
+}

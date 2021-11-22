@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/quarterblue/balancer/proto"
+	pb "github.com/quarterblue/balancer/proto"
 	"google.golang.org/grpc"
 )
 
-func gRpcCall(addr, method string, request *proto.KVRequest) (*proto.KVResponse, error) {
-	var response *proto.KVResponse
+func gRpcCall(addr, method string, request *pb.KVRequest) (*pb.KVResponse, error) {
+	var response *pb.KVResponse
 	var err error
 
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
@@ -19,7 +19,7 @@ func gRpcCall(addr, method string, request *proto.KVRequest) (*proto.KVResponse,
 	}
 	defer conn.Close()
 
-	client := proto.NewAddServiceClient(conn)
+	client := pb.NewAddServiceClient(conn)
 
 	ctx := context.Background()
 
@@ -47,8 +47,8 @@ func gRpcCall(addr, method string, request *proto.KVRequest) (*proto.KVResponse,
 	return response, nil
 }
 
-func gRpcNode(addr, method string, request *proto.NodeRequest) (*proto.Node, error) {
-	var response *proto.Node
+func gRpcNode(addr, method string, request *pb.NodeRequest) (*pb.Node, error) {
+	var response *pb.Node
 	var err error
 
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
@@ -56,7 +56,7 @@ func gRpcNode(addr, method string, request *proto.NodeRequest) (*proto.Node, err
 		return nil, err
 	}
 	defer conn.Close()
-	client := proto.NewNodeServiceClient(conn)
+	client := pb.NewNodeServiceClient(conn)
 
 	ctx := context.Background()
 

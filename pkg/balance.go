@@ -1,6 +1,8 @@
 package balancer
 
 import (
+	"sort"
+	"strconv"
 	"sync"
 )
 
@@ -17,12 +19,20 @@ type Config struct {
 	Hasher      Hasher
 	replication int
 	vNum        int
+	bound       int
 }
 
 type Balance struct {
-	config   Config
-	mutex    sync.RWMutex
-	hashMap  map[uint64]interface{}
+	// Configuration to set Hash algorithm, replication factor and bounds
+	config Config
+
+	// Mutex to protect against concurrent access to hashMap and nodeList
+	mutex sync.RWMutex
+
+	// Node list
+	hashMap map[uint64]interface{}
+
+	// Sorted list of keys
 	nodeList []uint64
 }
 
@@ -43,21 +53,25 @@ func NewBalance(config Config) *Balance {
 }
 
 func (b *Balance) FindNode(key string) interface{} {
-	hash := b.config.Hasher.Hash([]byte(key))
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
+	hash := b.config.Hasher.Hash([]byte(key))
 	// val, ok := b.hashMap[hash]
 	return hash
 }
 
-func (b *Balance) AddNode(node string) uint64 {
+func (b *Balance) AddNode(node string) {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
+
 	for i := 0; i < b.config.replication; i++ {
-		hash := b.config.Hasher.Hash([]byte(node))
+		hash := b.config.Hasher.Hash([]byte(node + strconv.Itoa(i)))
 		b.nodeList = append(b.nodeList, hash)
+		b.hashMap[hash] = node
 	}
-	return 2
+
+	// Keep the slice sorted
+	sort.Slice(b.nodeList, func(i, j int) bool { return b.nodeList[i] < b.nodeList[j] })
 }
 
 func (b *Balance) RemoveNode(n string) {

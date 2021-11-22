@@ -35,7 +35,7 @@ Loop:
 			break Loop
 		default:
 			time.Sleep(1 * time.Second)
-			chord.stabilize()
+			chord.Stabilize()
 		}
 	}
 }
