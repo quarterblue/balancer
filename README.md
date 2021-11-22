@@ -65,7 +65,7 @@ Flags:
   -join string
         IP Address to join initially. (default "")
   -port string
-        Port that this node should listen on. (default "3410")
+        Port that this node should listen on. (default "9001")
   -ring
         Boolean to start a ring. (default false)
   -cli
