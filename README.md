@@ -20,7 +20,20 @@ Balancer is a fault-tolerant implementation of a modified <a href="https://pdos.
 
 ## Installation
 
-To use as a `library`:
+### Decentralized KV Storage
+
+To use as a `CLI key-value storage`:
+
+```shell
+$ git clone github.com/quarterblue/balancer
+$ cd balancer/
+$ go mod download
+$ go build -o /balancer
+```
+
+### Load balancer
+
+To use as a `load balancer library`:
 
 ```shell
 $ cd projectdir/
@@ -35,28 +48,67 @@ import (
 )
 ```
 
-To use as a `CLI key-value storage`:
 
-```shell
-$ git clone github.com/quarterblue/balancer
-$ cd balancer/
-$ go mod download
-$ go build -o /balancer
-```
 
-## Usage
+## Usage (Chord)
 
-You can use it has an interactive Key-Value storage:
+You can use it has an interactive decentralized Key-Value storage:
 
 ```shell
 $ go run main.go -port 9001 -ring -cli
 ```
-To store a kv pair or to retrieve: 
+Flags: 
 
 ```shell
-$ [balancer] CMD-> get compare
-$ [balancer] CMD-> value: merkletree
+  -address string
+        This machines IP address. (default localhost)
+  -join string
+        IP Address to join initially. (default "")
+  -port string
+        Port that this node should listen on. (default "3410")
+  -ring
+        Boolean to start a ring. (default false)
+  -cli
+        Boolean to start CLI mode. (default false)
 ```
+### Commands:
+
+Input the CLI command for the chord ring CMD:
+
+```bash
+$ [balancer] CMD-> 
+```
+
+| Command | Description  | Usage  | 
+| ------ | -------- | ---------------- | 
+| `get`   | Retrieve a value | `get key` |
+| `put`   | Store a key value pair | `put key value` | 
+| `delete` | Delete a key value pair | `delete key` | 
+| `dump`  | Displays all key value pair stored on the local node| `dump all` | 
+| `leave`  | Leaves the chord ring by notifying | `leave` | 
+
+### Examples:
+
+To retrieve a kv pair:
+
+```shell
+$ [balancer] CMD-> get whatkey
+$ [balancer] OUT-> value: merkletree
+$ [balancer] CMD-> 
+```
+
+To store or delete a kv pair:
+
+```shell
+$ [balancer] CMD-> put anotherkey somevalue
+$ [balancer] OUT-> stored: somevalue
+$ [balancer] CMD-> 
+
+$ [balancer] CMD-> delete anotherkey
+$ [balancer] OUT-> deleted: anotherkey
+$ [balancer] CMD-> 
+```
+
 
 ## References
 
