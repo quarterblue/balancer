@@ -1,18 +1,21 @@
-package balancer
+package internal
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"math/big"
 	"sync"
 
-	"github.com/quarterblue/balancer/proto"
 	pb "github.com/quarterblue/balancer/proto"
 )
 
-// Successor list size
-const sListSize = 5
+const (
+	replicationFactor = 3   // Replication factor for redundant storage
+	sListSize         = 5   // Successor list size
+	m                 = 160 // bit size (for SHA-1)
+)
 
 // m-bit hash of the node IP Addr or the key (Default uses SHA-1)
 // current implementation stores a big int casted from the m-bit hash bytes
@@ -47,7 +50,7 @@ type Chord struct {
 	SuccessorList []*Node
 
 	// The finger route table described in the paper; maintains up to m entries (nodes)
-	Finger *FingerTable
+	FingerTable map[int]*Finger
 
 	// The previous node on the identifier circle
 	Predecessor *Node
@@ -57,6 +60,9 @@ type Chord struct {
 
 	// Mutex for protecting successor list
 	SuccMutex sync.RWMutex
+
+	// Next finger index to fix
+	next int
 }
 
 func NewChordNode(ipAddr, port string, successor *Node) *Chord {
@@ -68,10 +74,11 @@ func NewChordNode(ipAddr, port string, successor *Node) *Chord {
 		Port:          port,
 		Identifier:    iden,
 		SuccessorList: []*Node{successor},
-		Finger:        new(FingerTable),
+		FingerTable:   map[int]*Finger{},
 		Predecessor:   nil,
 		FingerMutex:   sync.RWMutex{},
 		SuccMutex:     sync.RWMutex{},
+		next:          0,
 	}
 
 	return chord
@@ -102,7 +109,18 @@ func (c *Chord) GetSuccessor(ctx context.Context, request *pb.NodeRequest) (*pb.
 }
 
 func (c *Chord) GetSuccessorList(ctx context.Context, request *pb.NodeRequest) (*pb.SuccessorResponse, error) {
-	return nil, nil
+	var sList = []*pb.Node{}
+
+	for _, n := range c.SuccessorList {
+		sList = append(sList, &pb.Node{
+			Ipaddr: n.IpAddr,
+			Port:   n.Port,
+		})
+	}
+
+	return &pb.SuccessorResponse{
+		Successorlist: sList,
+	}, nil
 }
 
 func (c *Chord) stabilize() {
@@ -144,7 +162,7 @@ func (c *Chord) successor() *Node {
 	// return n.Finger[1].successor
 }
 
-func (c *Chord) FindSuccessor(context.Context, *proto.NodeRequest) (*proto.Node, error) {
+func (c *Chord) FindSuccessor(ctx context.Context, request *pb.NodeRequest) (*pb.Node, error) {
 
 	// if between(c.Identifier, response.Successor.Identifier, c.SuccessorList[0].Identifier, true) {
 	// 	fmt.Println("True")
@@ -170,4 +188,33 @@ func closestPrecedingNode(id *big.Int) *Node {
 
 func withinFingerRange(n, successor *big.Int) bool {
 	return true
+}
+
+func (c *Chord) FixFingers() {
+	// Iterate up to m-bit, account for 0 index subtracting 1
+	if c.next > (m - 1) {
+		c.next = 0
+	}
+
+	ctx := context.Background()
+
+	response, err := c.FindSuccessor(ctx, &pb.NodeRequest{Node: ""})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	n := &Node{
+		IpAddr: response.GetIpaddr(),
+		Port:   response.GetPort(),
+	}
+
+	f := &Finger{
+		// start:     hashString(AddrToIpPort(c.IpAddr, c.Port)) + ,
+		// end:       hashString(AddrToIpPort(c.IpAddr, c.Port)),
+		successor: n,
+	}
+
+	c.FingerMutex.Lock()
+	c.FingerTable[c.next] = f
+	c.FingerMutex.Unlock()
 }

@@ -1,4 +1,4 @@
-package balancer
+package internal
 
 import (
 	"context"
@@ -64,7 +64,7 @@ func gRpcNode(addr, method string, request *proto.NodeRequest) (*proto.Node, err
 	case "predecessor":
 		fmt.Println("Predecessor")
 		response, err = client.Predecessor(ctx, request)
-	case "successorlist":
+	case "findsuccessor":
 		fmt.Println("FindSuccesor")
 		response, err = client.FindSuccessor(ctx, request)
 	default:

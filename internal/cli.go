@@ -1,4 +1,4 @@
-package balancer
+package internal
 
 import (
 	"bufio"
@@ -46,14 +46,9 @@ func Looper(s Settings) {
 		s.Address = GetLocalAddress()
 	}
 
-	fmt.Printf("Listening on: %s\n", s.Port)
+	fmt.Printf("Listening on: %s:%s\n", s.Address, s.Port)
 	fmt.Printf("Ring Join: %t\n", s.Ring)
 	fmt.Printf("Join address: %s\n", s.Join)
-	fmt.Printf("Node address: %s\n", s.Address)
-
-	addr := fmt.Sprint(s.Address, ":", s.Port)
-	fmt.Println("Address full:")
-	fmt.Println(addr)
 
 	var successor *Node
 
