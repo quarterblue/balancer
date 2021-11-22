@@ -1,11 +1,4 @@
-# balancer
-
-<a href="https://github.com/quarterblue/balancer/actions/workflows/go.yml" target="_blank">
-  <img src="https://github.com/quarterblue/balancer/actions/workflows/go.yml/badge.svg" alt="GitHub Passing">
-</a>
-<a href="https://github.com/quarterblue/pbalancer/blob/main/LICENSE" target="_blank">
-  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
-</a>
+# balancer [![GitHubPassing](https://github.com/quarterblue/balancer/actions/workflows/go.yml/badge.svg)](https://github.com/quarterblue/balancer/actions/workflows/go.yml) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/quarterblue/pbalancer/blob/main/LICENSE)
 
 Balancer is a fault-tolerant implementation of a modified <a href="https://pdos.csail.mit.edu/papers/ton:chord/paper-ton.pdf">Chord distributed hash tables</a>. It can be used as a standalone load balancer for distributed systems or a fully functional kv storage (with interactive cli). As a load balancer library, the keys are distributed using <a href="https://ai.googleblog.com/2017/04/consistent-hashing-with-bounded-loads.html">consistent hashing with bounded loads</a> (<a href="https://arxiv.org/pdf/1908.08762.pdf">w/ free random jumps</a>) to avoid cascading failure. As a kv storage, an interactive cli provides easy access. It can be used as a library to build decentralized peer-to-peer application on top of the chord ring. It exposes customizable replication factor and implements <a href="https://www.gsd.inesc-id.pt/~jgpaiva/pubs/nca13.pdf">multiple chords rings</a> to provide fault-tolerance.
 
