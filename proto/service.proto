@@ -14,7 +14,8 @@ message KVResponse {
 }
 
 message NodeRequest{
-    string node = 1;
+    string ipaddr = 1;
+    string port = 2;
 }
 
 message NodeResponse {
@@ -38,8 +39,8 @@ service AddService {
 }
 
 service NodeService {
-    rpc Predecessor(NodeRequest) returns (Node);
-    rpc SuccessorList(NodeRequest) returns (SuccessorResponse);
+    rpc GetPredecessor(NodeRequest) returns (Node);
+    rpc GetSuccessorList(NodeRequest) returns (SuccessorResponse);
     rpc FindSuccessor(NodeRequest) returns (Node);
     rpc Notify(NodeRequest) returns (Node);
 }

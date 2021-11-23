@@ -20,7 +20,7 @@ type Node struct {
 }
 
 func NewNode(ipAddr, port string) *Node {
-	addr := ipAddr + ":" + port
+	addr := AddrToIpPort(ipAddr, port)
 	hash := hashString(addr)
 	node := &Node{
 		IpAddr:     ipAddr,
@@ -41,18 +41,23 @@ func (n *Node) Notify(c *Chord) {
 	_, err := gRpcNode(targetAddr, "notify", request)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 }
 
-func (n *Node) FindSuccessor(c *Chord) *Node {
+func (n *Node) FindSuccessor(ipAddr, port string) *Node {
 	targetAddr := AddrToIpPort(n.IpAddr, n.Port)
-	fmt.Println(targetAddr)
+	fmt.Printf("target addr: %s\n", targetAddr)
 
-	request := &pb.NodeRequest{}
+	request := &pb.NodeRequest{
+		Ipaddr: ipAddr,
+		Port:   port,
+	}
 
 	response, err := gRpcNode(targetAddr, "findsuccessor", request)
 
 	if err != nil {
+		log.Println("Something wrong with findSucc")
 		log.Println(err)
 		return nil
 	}

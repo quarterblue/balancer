@@ -14,17 +14,20 @@ import (
 
 // Configuration settings
 type Settings struct {
+	// IP address of the current node
+	Address string
+
 	// Represents the port this node will listen on
 	Port string
-
-	// Boolean flag to indicate whether to create a new ring
-	Ring bool
 
 	// IP address of the node to contact to join the ring initially
 	Join string
 
-	// IP address of the current node
-	Address string
+	// Boolean flag to indicate whether to create a new ring
+	Ring bool
+
+	// Boolean flag to indicate whether to start interactive CLI
+	Cli bool
 }
 
 func StabilizeLoop(done chan interface{}, chord *Chord) {
@@ -40,8 +43,7 @@ Loop:
 	}
 }
 
-func Looper(s Settings) {
-
+func InitializeChord(s Settings) (*Chord, *RPCServer, *Store) {
 	if s.Address == "" {
 		s.Address = GetLocalAddress()
 	}
@@ -51,6 +53,7 @@ func Looper(s Settings) {
 	fmt.Printf("Join address: %s\n", s.Join)
 
 	var successor *Node
+	var chord *Chord
 
 	// Create a new ring
 	if s.Ring {
@@ -59,21 +62,24 @@ func Looper(s Settings) {
 			Port:       s.Port,
 			Identifier: hashString(AddrToIpPort(s.Address, s.Port)),
 		}
+		chord = NewChordNode(s.Address, s.Port, successor)
 	} else {
 		// Join a ring specified
 		joinAddrSplit := strings.SplitN(s.Join, ":", 2)
+
+		chord = NewChordNode(s.Address, s.Port, nil)
 
 		successor = &Node{
 			IpAddr:     joinAddrSplit[0],
 			Port:       joinAddrSplit[1],
 			Identifier: hashString(s.Join),
 		}
+
+		chord.Join(successor)
 	}
 
-	chord := NewChordNode(s.Address, s.Port, successor)
-
 	// New RPC Server with the configured settings
-	rpc := RPCServer{
+	rpc := &RPCServer{
 		Settings: s,
 	}
 
@@ -85,6 +91,12 @@ func Looper(s Settings) {
 		mutex:    &kvMutex,
 	}
 
+	return chord, rpc, store
+}
+
+func ExecutionLoop(s Settings) {
+
+	chord, rpc, store := InitializeChord(s)
 	// Listen for RPC requests in a separate go routine
 	go rpc.init("127.0.0.1:3001", store, chord)
 
@@ -96,7 +108,9 @@ func Looper(s Settings) {
 	log.Printf("Commands: ping, get, post")
 
 	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Printf("[balancer] CMD-> ")
 	for scanner.Scan() {
+		fmt.Printf("[balancer] OUT-> ")
 		line := scanner.Text()
 		line = strings.TrimSpace(line)
 
@@ -167,6 +181,20 @@ func Looper(s Settings) {
 			}
 			store.mutex.RUnlock()
 
+		case "succ":
+			chord.SuccMutex.RLock()
+			fmt.Printf("Successor: %s\n", chord.successor().IpAddrString())
+			chord.SuccMutex.RUnlock()
+
+		case "pred":
+			chord.PredMutex.Lock()
+			if pred := chord.predecessor(); pred == nil {
+				fmt.Printf("Predecessor: nil\n")
+			} else {
+				fmt.Printf("Predecessor: %s\n", chord.predecessor().IpAddrString())
+			}
+			chord.PredMutex.Unlock()
+
 		case "join":
 			targetAddr := strings.SplitN(args[1], ":", 2)
 			fmt.Printf("Joining Address: %s\n", targetAddr)
@@ -178,5 +206,6 @@ func Looper(s Settings) {
 		default:
 			fmt.Println("Invalid command.")
 		}
+		fmt.Printf("[balancer] CMD-> ")
 	}
 }

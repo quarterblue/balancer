@@ -17,21 +17,22 @@ const (
 	m                 = 160 // bit size (for SHA-1)
 )
 
-// m-bit hash of the node IP Addr or the key (Default uses SHA-1)
-// current implementation stores a big int casted from the m-bit hash bytes
-// type Identifier *big.Int
-
-// Interface of the Chord Node RPC, requires implementation of all node functionalities described in the paper
+// Interface of the Chord Node RPC, requires implementation of all node RPC functionalities
 type NodeRPC interface {
-	FindSuccessor()
-	ClosestPrecedingNode()
-	GetPredecessor()
-	GetSuccessorList()
-	Create()
-	Join()
+	FindSuccessor(ctx context.Context, request *pb.NodeRequest) (*pb.Node, error)
+	GetSuccessor(ctx context.Context, request *pb.NodeRequest) (*pb.Node, error)
+	GetPredecessor(ctx context.Context, request *pb.NodeRequest) (*pb.Node, error)
+	GetSuccessorList(ctx context.Context, request *pb.NodeRequest) (*pb.SuccessorResponse, error)
+}
+
+// Interface of the Chord Node, requires implementation of all node functionalities and Chord Node RPC functionalities
+type ChordNode interface {
+	NodeRPC
 	Stabilize()
+	ClosestPrecedingNode()
+	Join(node *Node)
+	FixFingers()
 	Notify()
-	FixFinger()
 	CheckPredecessor() bool
 }
 
@@ -55,6 +56,9 @@ type Chord struct {
 	// The previous node on the identifier circle
 	Predecessor *Node
 
+	// Mutex for protecting Predecessor
+	PredMutex sync.Mutex
+
 	// Mutex for protecting finger table
 	FingerMutex sync.RWMutex
 
@@ -76,6 +80,7 @@ func NewChordNode(ipAddr, port string, successor *Node) *Chord {
 		SuccessorList: []*Node{successor},
 		FingerTable:   map[int]*Finger{},
 		Predecessor:   nil,
+		PredMutex:     sync.Mutex{},
 		FingerMutex:   sync.RWMutex{},
 		SuccMutex:     sync.RWMutex{},
 		next:          0,
@@ -86,9 +91,104 @@ func NewChordNode(ipAddr, port string, successor *Node) *Chord {
 
 func (c *Chord) Join(node *Node) {
 	c.Predecessor = nil
-	succesor := node.FindSuccessor(c)
-	fmt.Println(succesor)
+	successor := node.FindSuccessor(c.IpAddr, c.Port)
+	fmt.Println(successor)
+	c.SuccMutex.Lock()
+	c.SuccessorList[0] = successor
+	c.SuccMutex.Unlock()
 }
+
+func (c *Chord) Stabilize() {
+	fmt.Println("Stabilizing")
+	successor := c.successor()
+
+	// Same identifier, we are the only node in the ring
+	if successor.Identifier.Cmp(c.Identifier) == 0 {
+		return
+	}
+
+	request := &pb.NodeRequest{}
+	successorAddr := AddrToIpPort(successor.IpAddr, successor.Port)
+
+	response, err := gRpcNode(successorAddr, "predecessor", request)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	pSucc := AddrToIpPort(response.GetIpaddr(), response.GetPort())
+	pSuccHash := hashString(pSucc)
+
+	// if (x E (n, successor))
+	if checkBetween(c.Identifier, pSuccHash, c.successor().Identifier, true) {
+		// successor = x;
+		newSuccessor := &Node{
+			IpAddr:     response.GetIpaddr(),
+			Port:       response.GetPort(),
+			Identifier: pSuccHash,
+		}
+
+		c.SuccessorList = append([]*Node{newSuccessor}, c.SuccessorList...)
+	}
+
+	c.SuccessorList[0].Notify(c)
+}
+
+func (c *Chord) FixFingers() {
+	// Iterate up to m-bit, account for 0 index subtracting 1
+	if c.next > (m - 1) {
+		c.next = 0
+	}
+
+	ctx := context.Background()
+
+	response, err := c.FindSuccessor(ctx, &pb.NodeRequest{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	n := &Node{
+		IpAddr: response.GetIpaddr(),
+		Port:   response.GetPort(),
+	}
+
+	f := &Finger{
+		start: fingerStart(c.IpAddr, c.Port, c.next),
+		end:   fingerEnd(c.IpAddr, c.Port, c.next),
+		node:  n,
+	}
+
+	c.FingerMutex.Lock()
+	c.FingerTable[c.next] = f
+	c.FingerMutex.Unlock()
+}
+
+func (c *Chord) InitFingerTable(join *Node) {
+	c.FingerMutex.Lock()
+	defer c.FingerMutex.Unlock()
+
+	// c.FingerTable[1].node = join.FindSuccessor()
+}
+
+func (c *Chord) ClosestPrecedingNode(id *big.Int) *Node {
+
+	// For i = m down to 1
+	for i := m; m > 1; i-- {
+		// Finger[i] E (n, id)
+	}
+
+	return nil
+}
+
+func (c *Chord) predecessor() *Node {
+	return c.Predecessor
+}
+
+func (c *Chord) successor() *Node {
+	return c.SuccessorList[0]
+}
+
+// These are the gRPC methods exposed to other peer nodes in the ring
 
 func (c *Chord) GetPredecessor(ctx context.Context, request *pb.NodeRequest) (*pb.Node, error) {
 	if c.Predecessor == nil {
@@ -123,98 +223,45 @@ func (c *Chord) GetSuccessorList(ctx context.Context, request *pb.NodeRequest) (
 	}, nil
 }
 
-func (c *Chord) Stabilize() {
-	fmt.Println("Stabilizing")
-	successor := c.successor()
-
-	// Same identifier
-	if successor.Identifier.Cmp(c.Identifier) == 0 {
-		return
-	}
-
-	request := &pb.NodeRequest{}
-	successorAddr := AddrToIpPort(successor.IpAddr, successor.Port)
-
-	response, err := gRpcNode(successorAddr, "predecessor", request)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	pSucc := AddrToIpPort(response.GetIpaddr(), response.GetPort())
-	pSuccHash := hashString(pSucc)
-
-	// if (x E (n, successor))
-	if checkBetween(c.Identifier, pSuccHash, c.successor().Identifier, true) {
-		// successor = x;
-		newSuccessor := &Node{
-			IpAddr:     response.GetIpaddr(),
-			Port:       response.GetPort(),
-			Identifier: pSuccHash,
-		}
-
-		c.SuccessorList = append([]*Node{newSuccessor}, c.SuccessorList...)
-	}
-
-	c.SuccessorList[0].Notify(c)
-}
-
 func (c *Chord) Notify(ctx context.Context, request *pb.NodeRequest) (*pb.Node, error) {
-	return nil, nil
-}
+	c.PredMutex.Lock()
+	defer c.PredMutex.Unlock()
+	addr := AddrToIpPort(request.Ipaddr, request.Port)
+	if c.Predecessor == nil || checkBetween(c.Predecessor.Identifier, hashString(addr), c.Identifier, true) {
+		c.Predecessor = NewNode(request.Ipaddr, request.Port)
+	}
 
-func (c *Chord) predecessor() *Node {
-	return c.Predecessor
-}
-
-func (c *Chord) successor() *Node {
-	return c.SuccessorList[0]
+	return &pb.Node{}, nil
 }
 
 func (c *Chord) FindSuccessor(ctx context.Context, request *pb.NodeRequest) (*pb.Node, error) {
+	pSucc := AddrToIpPort(request.Ipaddr, request.Port)
+	pSuccHash := hashString(pSucc)
 
-	// pSucc := AddrToIpPort(request.Ipaddr, response.GetPort())
-	// pSuccHash := hashString(pSucc)
+	return &pb.Node{
+		Ipaddr: c.IpAddr,
+		Port:   c.Port,
+	}, nil
 
-	// if checkBetween(c.Identifier, pSuccHash, c.successor().Identifier, true) {
-	// }
-
-	return nil, nil
-}
-
-func (c *Chord) closestPrecedingNode(id *big.Int) *Node {
-	return nil
-}
-
-func withinFingerRange(n, successor *big.Int) bool {
-	return true
-}
-
-func (c *Chord) FixFingers() {
-	// Iterate up to m-bit, account for 0 index subtracting 1
-	if c.next > (m - 1) {
-		c.next = 0
+	if checkBetween(c.Identifier, pSuccHash, c.successor().Identifier, true) {
+		// ID E (n, succcessor)
+		c.SuccMutex.RLock()
+		successor := &pb.Node{
+			Ipaddr: c.SuccessorList[0].IpAddr,
+			Port:   c.SuccessorList[0].IpAddr,
+		}
+		c.SuccMutex.RUnlock()
+		return successor, nil
 	}
 
-	ctx := context.Background()
+	nPrime := c.ClosestPrecedingNode(pSuccHash)
 
-	response, err := c.FindSuccessor(ctx, &pb.NodeRequest{Node: ""})
-	if err != nil {
-		log.Fatal(err)
+	node := nPrime.FindSuccessor(request.Ipaddr, request.Port)
+
+	successor := &pb.Node{
+		Ipaddr: node.IpAddr,
+		Port:   node.Port,
 	}
 
-	n := &Node{
-		IpAddr: response.GetIpaddr(),
-		Port:   response.GetPort(),
-	}
-
-	f := &Finger{
-		// start:     hashString(AddrToIpPort(c.IpAddr, c.Port)) + ,
-		// end:       hashString(AddrToIpPort(c.IpAddr, c.Port)),
-		successor: n,
-	}
-
-	c.FingerMutex.Lock()
-	c.FingerTable[c.next] = f
-	c.FingerMutex.Unlock()
+	return successor, nil
 }

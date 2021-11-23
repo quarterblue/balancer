@@ -7,3 +7,7 @@ install:
 	go mod download
 
 build:
+	go build -o /balancer
+
+run:
+	./balancer
