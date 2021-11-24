@@ -121,7 +121,6 @@ func (c *Chord) Stabilize() {
 
 	// if (x E (n, successor))
 	if checkBetween(c.Identifier, pSuccHash, c.successor().Identifier, true) {
-		// successor = x;
 		newSuccessor := &Node{
 			IpAddr:     response.GetIpaddr(),
 			Port:       response.GetPort(),
@@ -163,27 +162,34 @@ func (c *Chord) FixFingers() {
 	c.FingerMutex.Unlock()
 }
 
-func (c *Chord) InitFingerTable(join *Node) {
-	c.FingerMutex.Lock()
-	defer c.FingerMutex.Unlock()
+// func (c *Chord) InitFingerTable(join *Node) {
+// 	c.FingerMutex.Lock()
+// 	defer c.FingerMutex.Unlock()
 
-	// c.FingerTable[1].node = join.FindSuccessor()
-}
+// c.FingerTable[1].node = join.FindSuccessor()
+// }
 
 func (c *Chord) ClosestPrecedingNode(id *big.Int) *Node {
+	c.FingerMutex.RLock()
+	defer c.FingerMutex.RUnlock()
 
 	// For i = m down to 1
 	for i := m; m > 1; i-- {
 		// Finger[i] E (n, id)
+		if checkBetween(c.Identifier, c.FingerTable[m].node.Identifier, id, true) {
+			return c.FingerTable[m].node
+		}
 	}
 
 	return nil
 }
 
+// Not thread-safe, use with PredMutex
 func (c *Chord) predecessor() *Node {
 	return c.Predecessor
 }
 
+// Not thread-safe, use with SuccMutex
 func (c *Chord) successor() *Node {
 	return c.SuccessorList[0]
 }
@@ -191,6 +197,8 @@ func (c *Chord) successor() *Node {
 // These are the gRPC methods exposed to other peer nodes in the ring
 
 func (c *Chord) GetPredecessor(ctx context.Context, request *pb.NodeRequest) (*pb.Node, error) {
+	c.PredMutex.Lock()
+	defer c.PredMutex.Unlock()
 	if c.Predecessor == nil {
 		return nil, errors.New("predecessor is nil")
 	}
@@ -238,10 +246,10 @@ func (c *Chord) FindSuccessor(ctx context.Context, request *pb.NodeRequest) (*pb
 	pSucc := AddrToIpPort(request.Ipaddr, request.Port)
 	pSuccHash := hashString(pSucc)
 
-	return &pb.Node{
-		Ipaddr: c.IpAddr,
-		Port:   c.Port,
-	}, nil
+	// return &pb.Node{
+	// 	Ipaddr: c.IpAddr,
+	// 	Port:   c.Port,
+	// }, nil
 
 	if checkBetween(c.Identifier, pSuccHash, c.successor().Identifier, true) {
 		// ID E (n, succcessor)
